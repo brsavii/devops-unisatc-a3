@@ -1,15 +1,97 @@
-name: CI
+name: CI - E2E Tests
 
 on:
   pull_request:
+    branches: [develop, master]
 
 jobs:
-  test:
+  e2e-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container:
+      image: node:18-slim
+    
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: strapi
+          POSTGRES_USER: strapi
+          POSTGRES_PASSWORD: strapi
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with: { node-version: 18 }
-      - run: npm ci
-      - run: npm run test:e2e
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Setup environment
+        run: |
+          cp .env.example .env
+          echo "DATABASE_HOST=postgres" >> .env
+          echo "DATABASE_PORT=5432" >> .env
+          echo "DATABASE_NAME=strapi" >> .env
+          echo "DATABASE_USERNAME=strapi" >> .env
+          echo "DATABASE_PASSWORD=strapi" >> .env
+
+      - name: Build Strapi
+        run: pnpm build
+
+      - name: Start Strapi server
+        env:
+          NODE_ENV: test
+          HOST: 0.0.0.0
+          PORT: 1337
+          APP_KEYS: ImJMpHjnCdJw4ii7jZzCXQ==,Jg239VoMach6Fh2LAH6ydA==,LAdmPTwE8oqyVjAV4pCkBQ==,f1PGngKmE5xhyDktSpCVw==
+        run: |
+          nohup pnpm start > /dev/null 2>&1 &
+          echo "Waiting for Strapi to start..."
+          timeout 300 bash -c 'until curl -sSf http://localhost:1337 > /dev/null; do sleep 5; done' || (echo "Strapi failed to start" && exit 1)
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps
+
+      - name: Run Playwright
+        timeout-minutes: 10
+        run: pnpm exec playwright test --workers=2
+
+      - name: Upload Playwright results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30

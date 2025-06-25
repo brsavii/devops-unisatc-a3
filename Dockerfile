@@ -1,21 +1,17 @@
-FROM node:18-alpine
+FROM node:18
 
-# Diretório de trabalho
 WORKDIR /app
 
-# Instala dependências
-COPY package*.json ./
-RUN npm ci
+COPY package.json pnpm-lock.yaml ./
+RUN npm install -g pnpm && pnpm install
 
-# Copia código
+# Copia todo o código
 COPY . .
 
-# Build (se necessário)
-RUN npm run build
+# Executa o build do Strapi dentro da própria imagem
+RUN pnpm build
 
-# Exponha a porta do Strapi
-ENV PORT=1337
 EXPOSE 1337
 
-# Inicia Strapi apontando para sqlite (.tmp/db)
-CMD ["npm", "run", "start"]
+# Inicia em modo produção (usa o admin estático que acabou de ser gerado)
+CMD ["pnpm", "run", "start"]
