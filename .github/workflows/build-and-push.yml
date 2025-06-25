@@ -23,7 +23,11 @@ jobs:
         run: |
           IMAGE="us.gcr.io/${{ secrets.GCP_PROJECT }}/strapi-cms:${{ github.sha }}"
           docker build -t $IMAGE .
-      - name: Push to Artifact Registry
+      - name: Configure Docker for GCR
+        run: |
+          gcloud auth configure-docker --quiet us.gcr.io
+          
+      - name: Push to Google Container Registry
         run: |
           IMAGE="us.gcr.io/${{ secrets.GCP_PROJECT }}/strapi-cms:${{ github.sha }}"
           docker push $IMAGE
