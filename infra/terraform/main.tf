@@ -19,7 +19,7 @@ resource "google_cloud_run_service" "strapi" {
 
   template {
     spec {
-      service_account_name = google_service_account.sa.email
+      service_account_name = "strapi-sa@${var.project_id}.iam.gserviceaccount.com"
       containers {
         image = var.image
         ports {

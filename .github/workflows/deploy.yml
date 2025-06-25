@@ -28,13 +28,7 @@ jobs:
       - name: Terraform Init
         working-directory: infra/terraform
         run: terraform init
-
-      - name: Terraform Import Service Account
-        working-directory: infra/terraform
-        run: |
-          terraform init -input=false
-          terraform import google_service_account.sa projects/${{ secrets.GCP_PROJECT }}/serviceAccounts/strapi-sa@${{ secrets.GCP_PROJECT }}.iam.gserviceaccount.com
-
+  
       - name: Terraform Apply
         working-directory: infra/terraform
         env:
