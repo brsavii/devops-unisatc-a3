@@ -16,11 +16,7 @@ resource "google_cloud_run_service" "strapi" {
           container_port = 1337
         }
 
-        # Garante que o Strapi leia a porta certa e escute em todas as interfaces
-        env {
-          name  = "PORT"
-          value = "1337"
-        }
+        # Garante que o Strapi escute em todas as interfaces
         env {
           name  = "HOST"
           value = "0.0.0.0"
