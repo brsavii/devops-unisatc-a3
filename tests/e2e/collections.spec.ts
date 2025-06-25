@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 test("Deve criar uma nova categoria no Strapi", async ({ page }) => {
   // Login
-  await page.goto("http://localhost:1337/admin/auth/login");
+  // await page.goto("http://localhost:1337/admin/auth/login");
   await page.getByLabel("Email").fill("admin@satc.edu.br");
   await page.getByLabel("Password").fill("welcomeToStrapi123");
   await page.getByRole("button", { name: "Login" }).click();
