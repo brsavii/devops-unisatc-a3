@@ -1,52 +1,27 @@
-import { test } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 
-test("Deve criar uma nova categoria no Strapi e fazer logout", async ({
-  page,
-}) => {
-  // Acessa a página de login do painel administrativo
+test("Deve criar uma nova categoria no Strapi", async ({ page }) => {
+  // Login
   await page.goto("http://localhost:1337/admin/auth/login");
-
-  // Preenche o campo de e-mail
-  await page.getByRole("textbox", { name: "Email" }).click();
-  await page.getByRole("textbox", { name: "Email" }).fill("admin@satc.edu.br");
-
-  // Preenche o campo de senha
-  await page.getByRole("textbox", { name: "Password" }).click();
-  await page
-    .getByRole("textbox", { name: "Password" })
-    .fill("welcomeToStrapi123");
-
-  // Marca a opção "Lembrar de mim"
-  await page.getByRole("checkbox", { name: "Remember me" }).click();
-
-  // Clica no botão de login
+  await page.getByLabel("Email").fill("admin@satc.edu.br");
+  await page.getByLabel("Password").fill("welcomeToStrapi123");
   await page.getByRole("button", { name: "Login" }).click();
 
-  // Acessa o módulo de gerenciamento de conteúdo
+  // Navegação
   await page.getByRole("link", { name: "Content Manager" }).click();
-
-  // Acessa a lista de categorias
   await page.getByRole("link", { name: "Categoria" }).click();
-
-  // Inicia a criação de uma nova categoria
+  
+  // Criação da categoria
   await page.getByRole('main').getByRole('link', { name: 'Create new entry' }).first().click();
-
-  // Preenche o nome da nova categoria
-  await page
-    .getByRole("textbox", { name: "Nome" })
-    .click({ modifiers: ["Shift"] });
-  await page.getByRole("textbox", { name: "Nome" }).click(); // redundante, mas deixado como capturado
-  await page.getByRole("textbox", { name: "Nome" }).fill("Teste de Categoria");
-
-  // Salva a nova categoria
+  await page.getByLabel("Nome").fill("Teste de Categoria");
   await page.getByRole("button", { name: "Save" }).click();
 
-  // Abre o menu do usuário
-  await page.getByRole("button", { name: "SA Super Admin" }).click();
-
-  // Faz logout da conta
+  // Verificação
+  await expect(page.getByText('Teste de Categoria')).toBeVisible();
+  
+  // Logout
+  await page.getByRole("button", { name: /SA Super Admin/ }).click();
   await page.getByText("Log out").click();
-
-  // Verifica se voltou para a tela de boas-vindas
+  await expect(page).toHaveURL(/\/admin\/auth\/login/);
   await page.getByRole("heading", { name: "Welcome to Strapi!" }).click(); // opcional como verificação
 });
