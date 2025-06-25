@@ -28,14 +28,3 @@ jobs:
       - name: Terraform Init
         working-directory: infra/terraform
         run: terraform init
-  
-      - name: Terraform Apply
-        working-directory: infra/terraform
-        env:
-          TF_VAR_project_id: ${{ secrets.GCP_PROJECT }}
-          TF_VAR_image: us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/strapi-cms/strapi-cms:${{ github.sha }}
-        run: terraform apply -auto-approve   
-
-      - name: Mostrar URL
-        run: |
-          terraform output -raw url
