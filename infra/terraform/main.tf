@@ -1,17 +1,3 @@
-# Artifact Registry (opcional)
-resource "google_artifact_registry_repository" "repo" {
-  provider      = google
-  repository_id = "strapi-repo"
-  location      = var.region
-  format        = "DOCKER"
-}
-
-# Service Account
-resource "google_service_account" "sa" {
-  account_id   = "strapi-sa"
-  display_name = "Service Account for Strapi Cloud Run"
-}
-
 # Cloud Run
 resource "google_cloud_run_service" "strapi" {
   name     = var.service_name
@@ -19,7 +5,9 @@ resource "google_cloud_run_service" "strapi" {
 
   template {
     spec {
+      # usa a SA que você já criou manualmente
       service_account_name = "strapi-sa@${var.project_id}.iam.gserviceaccount.com"
+
       containers {
         image = var.image
         ports {
@@ -35,7 +23,7 @@ resource "google_cloud_run_service" "strapi" {
   }
 }
 
-# Permitir invocação pública
+# Permitir invocação pública (allUsers)
 resource "google_cloud_run_service_iam_member" "invoker" {
   service  = google_cloud_run_service.strapi.name
   location = google_cloud_run_service.strapi.location

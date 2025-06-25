@@ -33,8 +33,8 @@ jobs:
         working-directory: infra/terraform
         env:
           TF_VAR_project_id: ${{ secrets.GCP_PROJECT }}
-          TF_VAR_image: ${{ steps.build.outputs.IMAGE }}
-        run: terraform apply -auto-approve
+          TF_VAR_image: us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT }}/strapi-cms/strapi-cms:${{ github.sha }}
+        run: terraform apply -auto-approve   
 
       - name: Mostrar URL
         run: |
