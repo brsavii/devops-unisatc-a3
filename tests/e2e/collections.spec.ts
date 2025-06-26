@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 test("Deve criar uma nova categoria no Strapi", async ({ page }) => {
+  
   await page.goto("http://localhost:1337/admin/auth/login");
   await page.getByLabel("Email").fill("admin@satc.edu.br");
   await page.getByLabel("Password").fill("welcomeToStrapi123");
